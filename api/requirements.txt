@@ -1,5 +1,5 @@
 ﻿argon2-cffi==23.1.0
-cryptography==43.0.1
+cryptography==44.0.1
 Flask==3.0.3
 Flask-Cors==6.0.0
 python-dotenv==1.0.1
