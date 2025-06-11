@@ -3,7 +3,7 @@ cryptography==44.0.1
 Flask==3.0.3
 Flask-Cors==6.0.0
 python-dotenv==1.0.1
-requests==2.32.3
+requests==2.32.4
 sentry-sdk==2.16.0
 pyfcm==2.0.7
 pymongo==4.10.1
