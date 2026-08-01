@@ -508,14 +508,14 @@ export default Sentry.wrap(function App() {
     });
 
     get('login')
-    .then(res => {
+    .then(async res => {
       if (res) {
         login = res;
-        get('taskDelay')
-        .then(res => {
-          if (res) taskDelay = Number(res);
-        })
-        
+        // Read the stored interval before registering the task; registering
+        // first pins it to the default forever.
+        const storedDelay = Number(await get('taskDelay'));
+        if (Number.isFinite(storedDelay) && storedDelay > 0) taskDelay = storedDelay;
+
         ReactNativeForegroundService.add_task(() => sync(), {
           delay: taskDelay,
           onLoop: true,
