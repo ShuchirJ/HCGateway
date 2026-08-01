@@ -582,10 +582,14 @@ export default Sentry.wrap(function App() {
             defaultValue={(taskDelay / (1000 * 60 * 60)).toString()}
             onChangeText={text => {
               const hours = Number(text);
-              taskDelay = hours * 60 * 60 * 1000; 
+              // Clearing the field mid-edit yields Number('') === 0, which
+              // registers a 0ms loop.
+              if (!Number.isFinite(hours) || hours <= 0) return;
+              taskDelay = hours * 60 * 60 * 1000;
               setPlain('taskDelay', String(taskDelay));
               ReactNativeForegroundService.update_task(() => sync(), {
                 delay: taskDelay,
+                taskId: 'hcgateway_sync',
               })
               Toast.show({
                 type: 'success',
