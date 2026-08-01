@@ -160,6 +160,7 @@ const askForPermissions = async () => {
     { accessType: 'read', recordType: 'ElevationGained' },
     { accessType: 'read', recordType: 'FloorsClimbed' },
     { accessType: 'read', recordType: 'HeartRate' },
+    { accessType: 'read', recordType: 'HeartRateVariabilityRmssd' },
     { accessType: 'read', recordType: 'Height' },
     { accessType: 'read', recordType: 'Hydration' },
     { accessType: 'read', recordType: 'LeanBodyMass' },
@@ -294,7 +295,7 @@ const sync = async (customStartTime, customEndTime) => {
     lastSync = currentTime;
   }
 
-  let recordTypes = ["ActiveCaloriesBurned", "BasalBodyTemperature", "BloodGlucose", "BloodPressure", "BasalMetabolicRate", "BodyFat", "BodyTemperature", "BoneMass", "CyclingPedalingCadence", "CervicalMucus", "ExerciseSession", "Distance", "ElevationGained", "FloorsClimbed", "HeartRate", "Height", "Hydration", "LeanBodyMass", "MenstruationFlow", "MenstruationPeriod", "Nutrition", "OvulationTest", "OxygenSaturation", "Power", "RespiratoryRate", "RestingHeartRate", "SleepSession", "Speed", "Steps", "StepsCadence", "TotalCaloriesBurned", "Vo2Max", "Weight", "WheelchairPushes"]; 
+  let recordTypes = ["ActiveCaloriesBurned", "BasalBodyTemperature", "BloodGlucose", "BloodPressure", "BasalMetabolicRate", "BodyFat", "BodyTemperature", "BoneMass", "CyclingPedalingCadence", "CervicalMucus", "ExerciseSession", "Distance", "ElevationGained", "FloorsClimbed", "HeartRate", "HeartRateVariabilityRmssd", "Height", "Hydration", "LeanBodyMass", "MenstruationFlow", "MenstruationPeriod", "Nutrition", "OvulationTest", "OxygenSaturation", "Power", "RespiratoryRate", "RestingHeartRate", "SleepSession", "Speed", "Steps", "StepsCadence", "TotalCaloriesBurned", "Vo2Max", "Weight", "WheelchairPushes"]; 
   
   for (let i = 0; i < recordTypes.length; i++) {
       let records;
@@ -508,14 +509,14 @@ export default Sentry.wrap(function App() {
     });
 
     get('login')
-    .then(res => {
+    .then(async res => {
       if (res) {
         login = res;
-        get('taskDelay')
-        .then(res => {
-          if (res) taskDelay = Number(res);
-        })
-        
+        // Read the stored interval before registering the task; registering
+        // first pins it to the default forever.
+        const storedDelay = Number(await get('taskDelay'));
+        if (Number.isFinite(storedDelay) && storedDelay > 0) taskDelay = storedDelay;
+
         ReactNativeForegroundService.add_task(() => sync(), {
           delay: taskDelay,
           onLoop: true,
@@ -582,10 +583,14 @@ export default Sentry.wrap(function App() {
             defaultValue={(taskDelay / (1000 * 60 * 60)).toString()}
             onChangeText={text => {
               const hours = Number(text);
-              taskDelay = hours * 60 * 60 * 1000; 
+              // Clearing the field mid-edit yields Number('') === 0, which
+              // registers a 0ms loop.
+              if (!Number.isFinite(hours) || hours <= 0) return;
+              taskDelay = hours * 60 * 60 * 1000;
               setPlain('taskDelay', String(taskDelay));
               ReactNativeForegroundService.update_task(() => sync(), {
                 delay: taskDelay,
+                taskId: 'hcgateway_sync',
               })
               Toast.show({
                 type: 'success',
