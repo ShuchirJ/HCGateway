@@ -160,6 +160,7 @@ const askForPermissions = async () => {
     { accessType: 'read', recordType: 'ElevationGained' },
     { accessType: 'read', recordType: 'FloorsClimbed' },
     { accessType: 'read', recordType: 'HeartRate' },
+    { accessType: 'read', recordType: 'HeartRateVariabilityRmssd' },
     { accessType: 'read', recordType: 'Height' },
     { accessType: 'read', recordType: 'Hydration' },
     { accessType: 'read', recordType: 'LeanBodyMass' },
@@ -294,7 +295,7 @@ const sync = async (customStartTime, customEndTime) => {
     lastSync = currentTime;
   }
 
-  let recordTypes = ["ActiveCaloriesBurned", "BasalBodyTemperature", "BloodGlucose", "BloodPressure", "BasalMetabolicRate", "BodyFat", "BodyTemperature", "BoneMass", "CyclingPedalingCadence", "CervicalMucus", "ExerciseSession", "Distance", "ElevationGained", "FloorsClimbed", "HeartRate", "Height", "Hydration", "LeanBodyMass", "MenstruationFlow", "MenstruationPeriod", "Nutrition", "OvulationTest", "OxygenSaturation", "Power", "RespiratoryRate", "RestingHeartRate", "SleepSession", "Speed", "Steps", "StepsCadence", "TotalCaloriesBurned", "Vo2Max", "Weight", "WheelchairPushes"]; 
+  let recordTypes = ["ActiveCaloriesBurned", "BasalBodyTemperature", "BloodGlucose", "BloodPressure", "BasalMetabolicRate", "BodyFat", "BodyTemperature", "BoneMass", "CyclingPedalingCadence", "CervicalMucus", "ExerciseSession", "Distance", "ElevationGained", "FloorsClimbed", "HeartRate", "HeartRateVariabilityRmssd", "Height", "Hydration", "LeanBodyMass", "MenstruationFlow", "MenstruationPeriod", "Nutrition", "OvulationTest", "OxygenSaturation", "Power", "RespiratoryRate", "RestingHeartRate", "SleepSession", "Speed", "Steps", "StepsCadence", "TotalCaloriesBurned", "Vo2Max", "Weight", "WheelchairPushes"]; 
   
   for (let i = 0; i < recordTypes.length; i++) {
       let records;
