@@ -18,6 +18,28 @@ import base64
 v1 = Blueprint('v1', __name__, url_prefix='/api/')
 
 
+def _signup_allowed(username):
+    """Whether an unknown username may self-register through /login.
+
+    Historically /login created an account on the fly for any unknown
+    username. That turns an unauthenticated endpoint into an open account
+    factory: anyone who can reach the API gets a valid account.
+
+    This endpoint is also the sign-up path of the Android app (see README),
+    so a hard block would break first-time sign-up. Auto-registration is
+    therefore gated by an explicit allowlist instead of removed:
+
+      HCGATEWAY_ALLOWED_SIGNUP=alice,bob   # these names may self-register
+      HCGATEWAY_ALLOWED_SIGNUP             # (unset or empty) nobody may
+
+    Users that already exist are unaffected; only the creation of new
+    accounts is gated.
+    """
+    raw = os.environ.get('HCGATEWAY_ALLOWED_SIGNUP', '')
+    allowed = [u.strip() for u in raw.split(',') if u.strip()]
+    return username in allowed
+
+
 @v1.route("/login", methods=['POST'])
 def login(): 
     if not request.json or not 'username' in request.json or not 'password' in request.json:
@@ -32,6 +54,10 @@ def login():
     user = usrStore.find_one({'username': username})
 
     if not user:
+        # Do not create accounts implicitly. Only explicitly allowed
+        # usernames may self-register through this endpoint.
+        if not _signup_allowed(username):
+            return jsonify({'error': 'unknown user'}), 403
         user = usrStore.insert_one({'username': username, 'password': ph.hash(password)}).inserted_id
         usrStore.insert_one({'_id': str(user), 'username': username, 'password': ph.hash(password)})
         usrStore.delete_one({'_id': ObjectId(user)})
